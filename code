@@ -1,0 +1,158 @@
+from json import load
+
+import pygame
+
+import random 
+
+import time
+
+from pygame import mixer
+
+totScore = 0
+totLife = 5
+
+lista_inimigo = ["bala1.png", "bala2.png", "bala3.png"]
+
+lista_dano = ["CJDano1.mp3", "CJDano2.mp3"]
+
+pygame.init()
+
+tela = pygame.display.set_mode((1366,768))
+
+Clock = pygame.time.Clock()
+
+pygame.display.set_caption("cjbro")
+inimigo = pygame.image.load(random.choice(lista_inimigo))
+pygame.display.set_icon(inimigo)
+background = pygame.image.load("fundo.png")
+
+mixer.music.load("GTA.mpeg")
+pygame.mixer.music.set_volume(0.5) 
+mixer.music.play(-1) 
+
+CJImg = pygame.image.load("CJ.png") 
+cjX = 375
+cjY = 615 
+CJXmov = 0 
+PVel = 10 
+
+inimigoImg = pygame.image.load(random.choice(lista_inimigo))
+inimigoX = random.randint(0,768) 
+inimigoY = 0 
+inimigoYmov = 5 
+angulo = 10 
+i = 0 
+
+fontScore = pygame.font.Font('pricedown bl.otf', 45) 
+textScoreX = 400
+textScoreY = 20 
+
+fontLife = pygame.font.Font('pricedown bl.otf', 45) 
+textLifeX = 825 
+textLifeY = 20 
+
+overFont = pygame.font.Font('pricedown bl.otf', 200) 
+
+def player(x, y):
+	tela.blit(CJImg, (x, y))
+	
+def inimigo(x, y):
+	tela.blit(inimigoImg, (x, y)) 
+
+def replaceinimigo():
+	global inimigoX, inimigoY, inimigoYmov, PVel, angulo, inimigoImg 
+	inimigoImg = pygame.image.load(random.choice(lista_inimigo))
+	inimigoX = random.randint(0,768) 
+	inimigoY = 0 
+	inimigoYmov += 0.5  
+	PVel += 0.4
+
+def showScore(x, y):
+	score = fontScore.render("Score: " + str(totScore), True, (0, 200, 0)) 
+	tela.blit(score, (x, y)) 
+	
+def showLife(x, y):
+	life = fontLife.render("Lifes: " + str(totLife), False, (0, 200, 0)) 
+	tela.blit(life, (x, y)) 
+	
+
+corre = True 
+while corre: 
+	Clock.tick(30)
+	
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT: 
+			corre = False
+		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_LEFT: 
+				CJXmov = -PVel 
+			if event.key == pygame.K_RIGHT:
+				CJXmov = PVel 
+		if event.type == pygame.KEYUP: 
+			if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+				CJXmov = 0 
+
+	tela.fill((0,0,0))
+	
+	
+	tela.blit(background, (0,0))
+	
+	cjX += CJXmov
+	
+	if cjX <= 0:
+		cjX = 0
+	elif cjX >= 1230:
+		cjX = 1230
+		
+	if inimigoY < 760:
+		inimigoY += inimigoYmov
+		if i < 360:
+			i += angulo
+		else:
+			i = 0
+	else:
+		totLife -= 1
+		morte = mixer.Sound(random.choice(lista_dano)) 
+		pygame.mixer.Sound.set_volume(morte, 0.7) 
+		morte.play() 
+		if totLife <= 0:
+			showScore(textScoreX, textScoreY) 
+			showLife(textLifeX, textLifeY) 
+			time.sleep(1) 
+			
+			gameover = mixer.Sound("Wasted.mp3") 
+			pygame.mixer.Sound.set_volume(gameover, 10.0) 
+			gameover.play()
+			pygame.mixer.music.fadeout(5000) 
+			
+			inimigoY = 200
+			inimigoX = 370
+			inimigoYmov = 0 
+
+			overTexto = overFont.render("WASTED", True, (255, 0, 0))
+			tela.blit(overTexto, (300, 250)) 
+			
+			pygame.display.update()
+			time.sleep(5) 
+			break 
+		replaceinimigo()
+		
+	rectcj = pygame.Rect(cjX,cjY, 140, 120)
+	rectinimigo = pygame.Rect(inimigoX, inimigoY, 140, 120)
+	
+	if rectinimigo.colliderect(rectcj):	
+		get = mixer.Sound("espingarda.mp3")
+		pygame.mixer.Sound.set_volume(get, 0.7) 
+		get.play() 
+		
+		totScore += 1 
+		replaceinimigo()
+	
+	player(cjX, cjY)
+	
+	inimigo(inimigoX, inimigoY)
+	
+	showScore(textScoreX, textScoreY)
+	showLife(textLifeX, textLifeY)
+
+	pygame.display.update()
